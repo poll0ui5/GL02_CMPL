@@ -6,3 +6,4 @@ var Question = function(num, inti, cat, cho, ans){
 	this.answer = ans;
 }
 
+
