@@ -1,3 +1,3 @@
-var QUestionCollection(listQ){
+var QuestionCollection = function(listQ){
     this.listQuestion = listQ;
 }
