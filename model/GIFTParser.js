@@ -1,8 +1,5 @@
-require(semantique / Question.js);
-require(semantique / ColletionQuestion.js);
-
-// GiftParser
-
+require("semantique/Question.js");
+require("semantique/ColletionQuestion.js");
 
 var GiftParser = function (sTokenize, sParsedSymb) {
 	// The list of questions parsed from the input file.
@@ -27,19 +24,35 @@ var GiftParser = function (sTokenize, sParsedSymb) {
 	this.errorCount = 0;
 }
 
-// Parser procedure
+//fonction principale qui rassemble le tout 
+
+GiftParser.prototype.parse = function(data){
+    var tData = this.tokenize(data);
+    this.parsedQuestion = []; // Reset
+
+    while(tData.length > 0){
+        // On parse une question
+        this.parseQuestion(tData);
+        
+        // On nettoie les éventuels sauts de ligne entre les questions
+        while(tData.length > 0 && (tData[0] === "\r\n" || tData[0] === "")){
+            tData.shift();
+        }
+    }
+}
+
 
 // tokenize : tranform the data input into a list
 GiftParser.prototype.tokenize = function (data) {
 	var separator = /(\r\n|::|{|}|=|~|#|->|:|\.\.|\-|\%)/; //définir les symboles de séparation 
 	data = data.split(separator);
-	data = data.filter((val, idx) => !val.match(separator)); // ne garder que les jetons qui ne sont PAS des séparateurs				
+	data = data.filter((val) => val && val.trim() !== "");	
 	return data;
 }
 
 //=========================================== Outils pour parser ====================================================/
 
-VpfParser.prototype.next = function (input) {
+GiftParser.prototype.next = function (input) {
 	var curS = input.shift(); //supprime le premier élément du tableau
 	if (this.showParsedSymbols) {
 		console.log(curS);
@@ -63,7 +76,7 @@ GiftParser.prototype.expect = function (s, input) { // passe au jeton suivant et
 	return false;
 }
 
-VpfParser.prototype.accept = function (s) { //vérifie si le symbôle fait bien partie de la liste autorisée
+GiftParser.prototype.accept = function (s) { //vérifie si le symbôle fait bien partie de la liste autorisée
 	var idx = this.symb.indexOf(s);
 	// index 0 exists
 	if (idx === -1) {
@@ -74,7 +87,7 @@ VpfParser.prototype.accept = function (s) { //vérifie si le symbôle fait bien 
 	return idx;
 }
 
-VpfParser.prototype.errMsg = function (msg, input) { // pour afficher un message d'erreur
+GiftParser.prototype.errMsg = function (msg, input) { // pour afficher un message d'erreur
 	this.errorCount++;
 	console.log("Parsing Error ! on " + input + " -- msg : " + msg);
 }
@@ -104,7 +117,7 @@ GiftParser.prototype.parseQuestion = function (input) {
 	}
 
 	var text = "";
-	while (!this.check == "{" && input.length > 0) {
+	while (!this.check("{", input) && input.length > 0) {
 		text += this.next(input) + " ";
 	}
 	question.text = text.trim(); // stocke l'énoncé nettoyé
@@ -132,8 +145,209 @@ GiftParser.prototype.parseQuestion = function (input) {
 			this.parseMCQ(input, question);
 		}
 	}
-
 }
 
+GiftParser.prototype.parseTrueFalse = function (input, question) {
+	question.category = "TrueFalse";
+
+	if (this.check("T", input)){ //vérifie si la réponse est T
+		this.expect("T", input); // consomme le T
+		question.answer = true;
+	}
+	else if(this.check("F", input)){
+		this.expect("F", input);
+		question.answer = false;
+	}
+	else {
+        this.errMsg("Attendu : 'T' ou 'F' pour une question Vrai/Faux", input);
+    }
+	this.expect("}", input); //consomme la dernière accolade pour finir la question
+}
+
+GiftParser.prototype.parseMCQ = function(input, question){
+	question.category = "MCQ";
+	question.choices = [];
+
+	while (!this.check("}", input)){
+		if (this.check("=", input)){
+			this.expect("=", input);
+			var choice = this.parseChoiceContent(input); //pour lire le texte et le commentaire
+			choice.isCorrect = true;
+			question.choices.push(choice); //met le choix dans le tableau choices; push = .append en python
+		}
+		else if (this.check("~", input)) {
+            this.expect("~", input);
+            var choice = this.parseChoiceContent(input); // Lecture du texte et commentaire
+            choice.isCorrect = false;
+            question.choices.push(choice);
+        }
+		else{
+			this.next(input) //pour éviter une boucle infinie si on tombe sur autre chose
+		}
+
+		this.expect("}", input);
+	}
+}
+
+GiftParser.prototype.parseChoiceContent = function(input){
+	var choice = {text: "", feedback: ""}; // énoncé de la réponse et commentaire
+
+	//on va lire le texte, et continuer tant qu'on ne rencontre pas un symbole de contrôle = ~ } #
+	while (input.length > 0 && 
+           !this.check("=", input) && 
+           !this.check("~", input) && 
+           !this.check("}", input) && 
+           !this.check("#", input)) { 
+        choice.text += this.next(input) + " "; //ajout à la chaine de caractère
+    }
+    choice.text = choice.text.trim(); //supprime les espaces blancs
+
+	//lecture du commentaire 
+	if (this.check("#", input)) {
+        this.expect("#", input);
+        while (input.length > 0 && 
+               !this.check("=", input) && 
+               !this.check("~", input) && 
+               !this.check("}", input)) {
+            choice.feedback += this.next(input) + " ";
+        }
+        choice.feedback = choice.feedback.trim();
+    }
+    return choice;
+}
+
+GiftParser.prototype.parseNumeric = function(input, question){
+	question.category = "Numeric";
+	this.expect("#", input);
+	var number1 = this.next(input); //lecture du premier nombre : peut être la réponse cible OU le minimum
+	//il existe deux types de questions numériques : les range (valeur cible) et les intervalles
+	if (this.check(":", input)) {
+        this.expect(":", input);
+        var tolerance = this.next(input);
+
+        question.numericType = "Range";
+        question.value = parseFloat(number1);      // La valeur cible
+        question.tolerance = parseFloat(tolerance); // La tolérance acceptée
+    }
+
+	else if (this.check("..", input)) {
+        this.expect("..", input);
+        var number2 = this.next(input);
+
+        question.numericType = "Interval";
+		//parseFloat est une fonction native de JavaScript
+        question.min = parseFloat(number1); // Borne inférieure
+        question.max = parseFloat(number2); // Borne supérieure
+    }
+	else {
+        this.errMsg("Format numérique invalide. Attendu ':' ou '..'", input);
+    }
+    this.expect("}", input);
+}
+
+GiftParser.prototype.parseMatching = function(input, question){
+	question.category = "Matching";
+	question.pairs = [];
+
+	while(!this.check("}", input)){
+		// ABNF : reponseCorrespondance = "=" valeurGauche "->" valeurDroite
+		if (this.check("=", input)){
+			this.expect("=", input);
+			
+			//lecture de la valeur gauche
+
+			var leftVal = "";
+			while (!this.check("->", input) && input.length > 0) {
+                leftVal += this.next(input) + " ";
+            }
+            leftVal = leftVal.trim();
+			this.expect("->", input); //consomme la flèche
+
+			//lecture de la valeur droite
+
+			var rightVal = "";
+			while (!this.check("=", input) && !this.check("}", input) && input.length > 0) {
+                rightVal += this.next(input) + " ";
+            }
+			rightVal = rightVal.trim();
+
+			question.pairs.push({ left: leftVal, right: rightVal })
+		}
+		else {
+			this.next(input);
+		}	
+		this.expect("}", input);
+	};
+}
+
+GiftParser.prototype.parseCredit = function(input, question) {
+    // 1. Définition du type
+    question.category = "Credit";
+    question.choices = []; // On utilisera une liste de choix pondérés
+
+    // 2. Boucle tant qu'on n'est pas à la fin du bloc
+    while (!this.check("}", input)) {
+        
+        var choice = { text: "", weight: 0, feedback: "" };
+        
+        // --- ÉTAPE A : Gestion du préfixe (= ou ~) ---
+        // Dans le format Credit, on trouve parfois "=" pour la réponse à 100%
+        // ou "~" pour les partielles. Parfois rien avant le %.
+        // On consomme le symbole s'il est là.
+        if (this.check("=", input)) {
+            this.expect("=", input);
+        } else if (this.check("~", input)) {
+            this.expect("~", input);
+        }
+
+        // --- ÉTAPE B : Lecture du Pourcentage (%valeur%) ---
+        // C'est la signature de ce type de question
+        if (this.check("%", input)) {
+            this.expect("%", input);      // Premier %
+            var val = this.next(input);   // La valeur (ex: "50" ou "-33")
+            this.expect("%", input);      // Deuxième %
+            
+            choice.weight = parseFloat(val); // On stocke le poids
+        } else {
+            // Si pas de pourcentage explicite (cas rare dans un parseCredit, 
+            // mais possible pour la réponse correcte par défaut = 100)
+            choice.weight = 100; 
+        }
+
+        // --- ÉTAPE C : Lecture du Texte et du Feedback ---
+        // On lit le texte jusqu'au prochain symbole de contrôle
+        // (Les symboles de contrôle ici sont =, ~, }, et %)
+        while (input.length > 0 && 
+               !this.check("=", input) && 
+               !this.check("~", input) && 
+               !this.check("}", input) && 
+               !this.check("%", input) && // Le % peut démarrer le choix suivant
+               !this.check("#", input)) {
+            choice.text += this.next(input) + " ";
+        }
+        choice.text = choice.text.trim();
+
+        // --- ÉTAPE D : Lecture du Commentaire Optionnel (#) ---
+        if (this.check("#", input)) {
+            this.expect("#", input);
+            while (input.length > 0 && 
+                   !this.check("=", input) && 
+                   !this.check("~", input) && 
+                   !this.check("}", input) && 
+                   !this.check("%", input)) {
+                choice.feedback += this.next(input) + " ";
+            }
+            choice.feedback = choice.feedback.trim();
+        }
+
+        // --- ÉTAPE E : Stockage ---
+        question.choices.push(choice);
+    }
+
+    // 3. Sortie propre
+    this.expect("}", input);
+};
 
 
+
+module.exports = GiftParser;
