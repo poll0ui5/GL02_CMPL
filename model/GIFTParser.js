@@ -117,10 +117,16 @@ GiftParser.prototype.parseQuestion = function (input) {
 	}
 
 	var text = "";
-	while (!this.check("{", input) && input.length > 0) {
+	while (!this.check("{", input) && this.check("::", input) && input.length > 0) {
 		text += this.next(input) + " ";
 	}
 	question.text = text.trim(); // stocke l'énoncé nettoyé
+
+	if (input.length === 0 || this.check("::", input)) {
+        question.category = "Description";
+        this.parsedQuestion.push(question);
+        return; 
+    }
 
 	this.expect("{", input);
 	if (this.check('}', input)) { // si l'ensemble de réponse est vide, alors c'est une question ouverte 
@@ -347,7 +353,5 @@ GiftParser.prototype.parseCredit = function(input, question) {
     // 3. Sortie propre
     this.expect("}", input);
 };
-
-
 
 module.exports = GiftParser;
