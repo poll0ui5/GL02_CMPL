@@ -183,9 +183,17 @@ GiftParser.prototype.parseMCQ = function(input, question){
 		}
 		else if (this.check("~", input)) {
             this.expect("~", input);
-            var choice = this.parseChoiceContent(input); // Lecture du texte et commentaire
-            choice.isCorrect = false;
-            question.choices.push(choice);
+            if (this.check("=", input)){
+				this.expect("=", input);
+				var choice = this.parseChoiceContent(input);
+				choice.isCorrect = true;
+				question.choices.push(choice);
+			}
+			else{
+				var choice = this.parseChoiceContent(input);
+				choice.isCorrect = false;
+				question.choices.push(choice);
+			}
         }
 		else{
 			this.next(input) //pour éviter une boucle infinie si on tombe sur autre chose
