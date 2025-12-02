@@ -1,10 +1,10 @@
 // test_parser.js
 
 const fs = require('fs');
-const GiftParser = require('GiftParser'); // Assure-toi que le chemin est bon
+// Chemin relatif vers le fichier local
+const GiftParser = require('./GIFTParser.js'); 
 
-// Récupère le fichier passé en argument commande (ex: node test_parser.js mon_fichier.gift)
-// Sinon, utilise 'test.gift' par défaut
+// Récupère le fichier passé en argument ou utilise 'test.gift' par défaut
 const fichierTest = process.argv[2] || 'test.gift';
 
 function testFichierGift(chemin) {
@@ -12,18 +12,10 @@ function testFichierGift(chemin) {
     console.log("---------------------------------------------------");
 
     try {
-        // 1. Lecture du fichier
-        // 'utf8' est important pour bien lire les accents
         const data = fs.readFileSync(chemin, 'utf8');
-
-        // 2. Initialisation du parseur
-        // (false, false) pour désactiver le mode debug verbeux
         const parser = new GiftParser(false, false);
-
-        // 3. Exécution du parsing
         parser.parse(data);
 
-        // 4. Affichage des résultats
         const questions = parser.parsedQuestion;
         
         if (questions.length === 0) {
@@ -42,11 +34,14 @@ function testFichierGift(chemin) {
     }
 }
 
-// Fonction utilitaire pour afficher proprement les objets Questions
 function afficherDetails(questions) {
     questions.forEach((q, index) => {
         console.log(`Question ${index + 1} [Type: ${q.category}]`);
-        if (q.title) console.log(`   Titre : ${q.title}`);
+        
+        if (q.title) {
+            console.log(`   Titre : ${q.title}`);
+        }
+        
         console.log(`   Texte : "${q.text}"`);
 
         // Affichage spécifique selon le type
@@ -61,9 +56,9 @@ function afficherDetails(questions) {
                 console.log(`   Choix :`);
                 q.choices.forEach(c => {
                     let status = "";
-                    if (c.isCorrect === true) status = "✅ (Correct)";
-                    else if (c.isCorrect === false) status = " (Faux)";
-                    else if (c.weight !== undefined) status = `(${c.weight}%)`;
+                    if (c.isCorrect === true) status = "(Correct)";
+                    else if (c.isCorrect === false) status = "(Faux)";
+                    else if (c.weight !== undefined) status = `(Poids: ${c.weight}%)`;
                     
                     console.log(`     - ${status} "${c.text}" ${c.feedback ? `(Feedback: ${c.feedback})` : ''}`);
                 });
@@ -72,16 +67,16 @@ function afficherDetails(questions) {
             case 'Matching':
                 console.log(`   Paires :`);
                 q.pairs.forEach(p => {
-                    console.log(`"${p.left}" -> "${p.right}"`);
+                    console.log(`     - "${p.left}" -> "${p.right}"`);
                 });
                 break;
 
             case 'Numeric':
                 console.log(`   Type Numérique : ${q.numericType}`);
                 if (q.numericType === 'Range') {
-                    console.log(` Valeur : ${q.value} (±${q.tolerance})`);
+                    console.log(`     Valeur : ${q.value} (±${q.tolerance})`);
                 } else if (q.numericType === 'Interval') {
-                    console.log(`Intervalle : [${q.min} ... ${q.max}]`);
+                    console.log(`     Intervalle : [${q.min} ... ${q.max}]`);
                 }
                 break;
                 
@@ -89,9 +84,14 @@ function afficherDetails(questions) {
                 console.log(`   (Question Ouverte - Pas de réponse automatique)`);
                 break;
         }
+
+        // Affichage de la fin de phrase pour les textes à trous
+        if (q.tail) {
+            console.log(`   Fin de phrase : "${q.tail}"`);
+        }
+
         console.log("---------------------------------------------------");
     });
 }
 
-// Lancement du test
 testFichierGift(fichierTest);
