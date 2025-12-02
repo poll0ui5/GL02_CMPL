@@ -1,11 +1,20 @@
 var Question = function(num, inti, cat, cho, ans){
-	this.number = num;
-	this.label = inti;
-	this.category = cat;
-	this.answer = ans;
-	this.pairs = null;
-	this.choices = null;
-	this.pairs = null;
-}
+    this.number = num;
+    this.text = inti || "";
+    this.tail = "";         
+    this.category = cat;
+    this.choices = cho || [];
+    this.answer = ans;
+    
 
+    this.numericType = null;
+    this.value = null;
+    this.tolerance = null;
+    this.min = null;
+    this.max = null;
+    
 
+    this.pairs = [];
+}; 
+
+module.exports = Question;
