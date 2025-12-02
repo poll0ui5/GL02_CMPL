@@ -41,7 +41,6 @@ function afficherDetails(questions) {
         if (q.title) {
             console.log(`   Titre : ${q.title}`);
         }
-        
         console.log(`   Texte : "${q.text}"`);
 
         // Affichage spécifique selon le type
