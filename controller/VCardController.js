@@ -1,7 +1,6 @@
 // controller/VCardController.js
 const fs = require('fs');
 const Contact = require('../model/Contact');
-const CLIView = require('../view/CLIView');
 
 class VCardController {
     constructor() {

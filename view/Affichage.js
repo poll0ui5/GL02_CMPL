@@ -18,8 +18,6 @@ class Affichage {
             const questionSnippet = q.text.substring(0, 80).replace(/\n/g, ' ').trim() + (q.text.length > 80 ? '...' : '');
             console.log(`${q.id.padEnd(5)} [${q.category.padEnd(10)}] : ${questionSnippet}`);
         });
-        console.log("------------------------------------------------------------------");
-        console.log("Utilisez 'afficher Qx' pour consulter le contenu complet.");
     }
 
     /**
