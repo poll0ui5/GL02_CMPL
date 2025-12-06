@@ -1,5 +1,5 @@
 const Question = require("./semantique/Question.js");
-const QuestionCollection = require("./QuestionCollection.js");
+const QuestionCollection = require("./semantique/QuestionCollection.js");
 
 var GiftParser = function (sTokenize, sParsedSymb) {
 	// The list of questions parsed from the input file.
