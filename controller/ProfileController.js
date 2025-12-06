@@ -3,7 +3,7 @@
 //pour la spec05
 
 const fs = require('fs');
-const GiftParser = require('../model/GIFTParser'); // Ton parseur existant
+const GiftParser = require('../model/GIFTParser');
 const GiftProfile = require('../model/GiftProfile');
 const ProfileView = require('../view/ProfileView');
 

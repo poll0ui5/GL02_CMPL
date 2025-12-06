@@ -3,7 +3,7 @@
 //code de la spec04
 
 const fs = require('fs');
-const GiftParser = require('../model/GiftParser'); // Ton parser existant
+const GiftParser = require('../model/GIFTParser');
 const ExamSession = require('../model/ExamSession');
 const ExamView = require('../view/ExamView');
 
