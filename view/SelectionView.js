@@ -7,15 +7,16 @@ class SelectionView {
             {
                 type: 'list',
                 name: 'action',
-                message: 'Menu de Sélection :',
-                pageSize: 10,
+                message: 'Menu de Selection :',
+                pageSize: 12,
                 choices: [
-                    { name: 'Rechercher et ajouter des questions', value: 'search_add' }, // NOUVEAU
+                    { name: 'Rechercher des questions (pour ajout ou consultation)', value: 'search_mode' },
+                    new inquirer.Separator(),
                     { name: 'Ajouter une question par ID (Manuel)', value: 'add' },
                     { name: 'Retirer une question par ID', value: 'remove' },
-                    { name: 'Visualiser la sélection actuelle', value: 'list' },
+                    { name: 'Visualiser la selection actuelle', value: 'list' },
                     new inquirer.Separator(),
-                    { name: 'Sauvegarder (Générer l\'examen)', value: 'save' },
+                    { name: 'Sauvegarder (Generer l\'examen)', value: 'save' },
                     { name: 'Quitter sans sauvegarder', value: 'exit' }
                 ]
             }
@@ -28,34 +29,51 @@ class SelectionView {
             {
                 type: 'input',
                 name: 'keyword',
-                message: 'Entrez un mot-clé pour rechercher des questions :',
-                validate: input => input.trim() !== '' ? true : "Le mot-clé ne peut pas être vide."
+                message: 'Entrez un mot-cle pour rechercher des questions :',
+                validate: input => input.trim() !== '' ? true : "Le mot-cle ne peut pas etre vide."
             }
         ]);
         return answer.keyword;
     }
 
-    // --- NOUVELLE MÉTHODE : Sélection multiple dans une liste ---
-    async selectQuestionsFromSearch(questions) {
-        // On prépare l'affichage : [ID] (Type) Début du texte...
+    async showSearchResults(questions) {
         const choices = questions.map(q => {
-            const snippet = q.text.substring(0, 80).replace(/(\r\n|\n|\r)/gm, " ");
+            const snippet = q.text.substring(0, 60).replace(/(\r\n|\n|\r)/gm, " ");
             return {
                 name: `[${q.id}] (${q.category}) ${snippet}`,
                 value: q.id
             };
         });
 
+        choices.push(new inquirer.Separator());
+        choices.push({ name: '<-- Retour au menu principal', value: 'BACK' });
+
         const answer = await inquirer.prompt([
             {
-                type: 'checkbox',
-                name: 'selectedIds',
-                message: 'Cochez les questions à ajouter (Espace pour cocher, Entrée pour valider) :',
-                choices: choices,
-                pageSize: 15 // Affiche plus de résultats pour faciliter la lecture
+                type: 'list',
+                name: 'selectedId',
+                message: `Resultats de la recherche (${questions.length} trouves). Choisissez une question :`,
+                pageSize: 15,
+                choices: choices
             }
         ]);
-        return answer.selectedIds;
+        return answer.selectedId;
+    }
+
+    async showQuestionActionMenu(questionId) {
+        const answer = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'action',
+                message: `Action pour la question ${questionId} :`,
+                choices: [
+                    { name: 'Voir les details complets', value: 'view' },
+                    { name: 'Ajouter a la selection', value: 'add' },
+                    { name: 'Retour a la liste de recherche', value: 'back' }
+                ]
+            }
+        ]);
+        return answer.action;
     }
 
     async promptForId() {
@@ -64,7 +82,7 @@ class SelectionView {
                 type: 'input',
                 name: 'id',
                 message: 'Entrez l\'ID de la question (ex: Q1, Q45) :',
-                validate: input => input.trim() !== '' ? true : "L'ID ne peut pas être vide."
+                validate: input => input.trim() !== '' ? true : "L'ID ne peut pas etre vide."
             }
         ]);
         return answer.id;
@@ -83,9 +101,9 @@ class SelectionView {
     }
 
     displayList(questions) {
-        console.log("\n=== CONTENU DE LA SÉLECTION ===");
+        console.log("\n=== CONTENU DE LA SELECTION ===");
         if (questions.length === 0) {
-            console.log("   (Aucune question sélectionnée)");
+            console.log("   (Aucune question selectionnee)");
         } else {
             questions.forEach((q, index) => {
                 const snippet = q.text.substring(0, 60).replace(/\n/g, ' ') + "...";
@@ -96,11 +114,11 @@ class SelectionView {
     }
 
     displaySuccess(msg) {
-        console.log(`${msg}`);
+        console.log(`OK : ${msg}`);
     }
 
     displayError(msg) {
-        console.error(`Erreur : ${msg}`);
+        console.error(`ERREUR : ${msg}`);
     }
 }
 
