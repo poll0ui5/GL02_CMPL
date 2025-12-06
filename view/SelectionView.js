@@ -10,20 +10,19 @@ class SelectionView {
                 message: 'Menu de Sélection :',
                 pageSize: 10,
                 choices: [
-                    { name: '🔍 Rechercher et ajouter des questions', value: 'search_add' }, // NOUVEAU
-                    { name: '➕ Ajouter une question par ID (Manuel)', value: 'add' },
-                    { name: '➖ Retirer une question par ID', value: 'remove' },
-                    { name: '👀 Visualiser la sélection actuelle', value: 'list' },
+                    { name: 'Rechercher et ajouter des questions', value: 'search_add' }, // NOUVEAU
+                    { name: 'Ajouter une question par ID (Manuel)', value: 'add' },
+                    { name: 'Retirer une question par ID', value: 'remove' },
+                    { name: 'Visualiser la sélection actuelle', value: 'list' },
                     new inquirer.Separator(),
-                    { name: '💾 Sauvegarder (Générer l\'examen)', value: 'save' },
-                    { name: '❌ Quitter sans sauvegarder', value: 'exit' }
+                    { name: 'Sauvegarder (Générer l\'examen)', value: 'save' },
+                    { name: 'Quitter sans sauvegarder', value: 'exit' }
                 ]
             }
         ]);
         return answer.action;
     }
 
-    // --- NOUVELLE MÉTHODE : Prompt Recherche ---
     async promptForSearchKeyword() {
         const answer = await inquirer.prompt([
             {
@@ -97,11 +96,11 @@ class SelectionView {
     }
 
     displaySuccess(msg) {
-        console.log(`✅ ${msg}`);
+        console.log(`${msg}`);
     }
 
     displayError(msg) {
-        console.error(`❌ Erreur : ${msg}`);
+        console.error(`Erreur : ${msg}`);
     }
 }
 
