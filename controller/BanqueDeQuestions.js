@@ -79,7 +79,7 @@ class BanqueDeQuestions {
      * @returns {Question|null} L'objet Question ou null.
      */
     getQuestionById(id) {
-        return this.questions.find(q => q.id === id) || null; // CA MARCHE MERCI GEMINI LE S
+        return this.questions.find(q => q.id === id) || null;
     }
 }
 

@@ -4,7 +4,7 @@ class QuestionSelection {
     }
 
     add(question) {
-        // Vérifie si la question est déjà dans la liste pour éviter les doublons
+        // SPEC_NF01 : Éviter les doublons
         if (!this.exists(question.id)) {
             this.questions.push(question);
             return true;
@@ -15,7 +15,7 @@ class QuestionSelection {
     remove(id) {
         const initialLength = this.questions.length;
         this.questions = this.questions.filter(q => q.id !== id);
-        return this.questions.length < initialLength; // Retourne true si une suppression a eu lieu
+        return this.questions.length < initialLength;
     }
 
     exists(id) {
@@ -28,6 +28,18 @@ class QuestionSelection {
 
     count() {
         return this.questions.length;
+    }
+
+    // SPEC_NF01 : Contrôle que l'examen contient entre 15 et 20 questions
+    isValid() {
+        const count = this.count();
+        if (count < 15) {
+            return { valid: false, error: `Pas assez de questions. Il en faut au moins 15 (Actuel : ${count}).` };
+        }
+        if (count > 20) {
+            return { valid: false, error: `Trop de questions. Le maximum est de 20 (Actuel : ${count}).` };
+        }
+        return { valid: true };
     }
 }
 
