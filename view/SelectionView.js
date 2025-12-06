@@ -59,7 +59,7 @@ class SelectionView {
     }
 
     displaySuccess(msg) {
-        console.log(`✅ ${msg}`);
+        console.log(`${msg}`);
     }
 
     displayError(msg) {
