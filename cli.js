@@ -115,7 +115,19 @@ cli
         // On instancie le ExamController créé précédemment
         const controller = new ExamController();
         await controller.processExam(args.file);
-    });
+    })
+
+// ====================================================================================
+// COMMANDE 7 : SELECTION (SPEC07)
+// Gestion interactive d'une sélection de questions
+// ====================================================================================
+.command('selection', 'Gérer une sélection de questions pour créer un examen')
+    .action(async () => {
+        // Import dynamique pour éviter de charger si non utilisé
+        const SelectionController = require('./controller/SelectionController.js');
+        const controller = new SelectionController();
+        await controller.start();
+    })
 
 // Lancement de l'application
 cli.run(process.argv.slice(2));
