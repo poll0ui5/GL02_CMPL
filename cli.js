@@ -8,11 +8,22 @@ const BanqueDeQuestions = require('./controller/BanqueDeQuestions.js');
 const ProfileController = require('./controller/ProfileController.js');
 const VCardController = require('./controller/VCardController.js');
 const Affichage = require('./view/Affichage.js');
-const ExamController = require('./controller/ExamController.js'); // <-- NOUVEL IMPORT POUR SPEC04
+const ExamController = require('./controller/ExamController.js');
+const AppController = require('./controller/AppController.js'); // <-- Nouveau Hub
 
 cli
     .version('gift-parser-cli')
     .version('1.0.0')
+
+
+    // ====================================================================================
+    // MODE INTERACTIF (Par défaut) - SPEC_NF02
+    // ====================================================================================
+    .action(async ({args, options, logger}) => {
+        // Si aucune commande n'est passée, on lance le menu interactif
+        const app = new AppController();
+        await app.start();
+    })
 
     // ====================================================================================
     // COMMANDE 1 : CHECK
