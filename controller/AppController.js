@@ -6,7 +6,7 @@ const VCardController = require('./VCardController');
 const ExamController = require('./ExamController');
 const ProfileController = require('./ProfileController');
 const BanqueDeQuestions = require('./BanqueDeQuestions');
-const Affichage = require('../view/Affichage'); // IMPORT CRUCIAL
+const Affichage = require('../view/Affichage');
 
 class AppController {
 
@@ -70,7 +70,6 @@ class AppController {
         }
     }
 
-    // Fonction de recherche interactive qui utilise Affichage.js
     async handleSearch() {
         const answer = await inquirer.prompt([{
             type: 'input',
@@ -116,7 +115,6 @@ class AppController {
             } else {
                 const question = banque.getQuestionById(selection.questionId);
                 if (question) {
-                    // REUTILISATION DE LA VUE EXISTANTE
                     Affichage.afficherQuestionComplete(question);
                 } else {
                     console.error("Erreur : Question introuvable.");

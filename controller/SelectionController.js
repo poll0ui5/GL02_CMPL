@@ -3,7 +3,7 @@ const BanqueDeQuestions = require('./BanqueDeQuestions');
 const QuestionSelection = require('../model/QuestionSelection');
 const SelectionView = require('../view/SelectionView');
 const GiftExporter = require('../model/GiftExporter');
-const Affichage = require('../view/Affichage'); // REUTILISATION
+const Affichage = require('../view/Affichage');
 
 class SelectionController {
     constructor() {
@@ -73,7 +73,6 @@ class SelectionController {
 
             switch (action) {
                 case 'view':
-                    // ICI : On utilise la vue existante Affichage.js
                     Affichage.afficherQuestionComplete(question);
                     break;
 
@@ -97,8 +96,6 @@ class SelectionController {
         }
     }
 
-    // ... (Méthodes handleAdd, handleRemove, handleSave identiques à avant) ...
-    // Je ne les répète pas ici pour être concis, mais elles restent dans le fichier final.
     async handleAdd() {
         if (this.selection.count() >= 20) {
             this.view.displayError("Vous avez atteint la limite maximale de 20 questions.");
