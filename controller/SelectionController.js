@@ -13,12 +13,12 @@ class SelectionController {
     }
 
     async start() {
-        // 1. Charger la banque de questions au démarrage
+        // SPEC_NF03 : Performance - Chargement unique au début du module
+        console.log("Chargement de la banque de questions...");
         this.banque.chargerBanque();
 
         let loop = true;
         while (loop) {
-            // Afficher le menu et attendre le choix
             const action = await this.view.showMenu();
 
             switch (action) {
@@ -32,10 +32,9 @@ class SelectionController {
                     this.view.displayList(this.selection.getAll());
                     break;
                 case 'save':
-                    loop = await this.handleSave(); // Retourne false si sauvegardé pour quitter
+                    loop = await this.handleSave();
                     break;
                 case 'exit':
-                    console.log("Au revoir !");
                     loop = false;
                     break;
             }
@@ -43,21 +42,25 @@ class SelectionController {
     }
 
     async handleAdd() {
-        const idRaw = await this.view.promptForId();
-        // Formater l'ID comme dans cli.js (ex: "45" -> "Q45")
-        const id = idRaw.toUpperCase().startsWith('Q') ? idRaw.toUpperCase() : `Q${idRaw}`;
+        // SPEC_NF01 : Vérification limite haute avant ajout (optionnel mais recommandé)
+        if (this.selection.count() >= 20) {
+            this.view.displayError("Vous avez atteint la limite maximale de 20 questions.");
+            return;
+        }
 
+        const idRaw = await this.view.promptForId();
+        const id = idRaw.toUpperCase().startsWith('Q') ? idRaw.toUpperCase() : `Q${idRaw}`;
         const question = this.banque.getQuestionById(id);
 
         if (!question) {
-            this.view.displayError(`Question ${id} introuvable dans la banque.`);
+            this.view.displayError(`Question ${id} introuvable.`);
             return;
         }
 
         if (this.selection.add(question)) {
             this.view.displaySuccess(`Question ${id} ajoutée.`);
         } else {
-            this.view.displayError(`La question ${id} est déjà dans votre sélection.`);
+            this.view.displayError(`La question ${id} est déjà dans la liste (Doublon interdit).`);
         }
     }
 
@@ -66,7 +69,6 @@ class SelectionController {
             this.view.displayError("La sélection est vide.");
             return;
         }
-
         const idRaw = await this.view.promptForId();
         const id = idRaw.toUpperCase().startsWith('Q') ? idRaw.toUpperCase() : `Q${idRaw}`;
 
@@ -78,23 +80,24 @@ class SelectionController {
     }
 
     async handleSave() {
-        if (this.selection.count() === 0) {
-            this.view.displayError("Vous ne pouvez pas sauvegarder une sélection vide.");
-            return true; // Continue la boucle
+        // SPEC_NF01 : Validation stricte 15-20 questions
+        const validation = this.selection.isValid();
+        if (!validation.valid) {
+            this.view.displayError(`Validation échouée : ${validation.error}`);
+            return true; // On reste dans la boucle pour permettre à l'utilisateur de corriger
         }
 
         const filename = await this.view.promptForFilename();
         const exporter = new GiftExporter(this.selection.getAll());
-        const content = exporter.export(); // Utilise votre GiftExporter existant
+        const content = exporter.export();
 
         try {
-            // Sauvegarde dans le répertoire courant ou un dossier spécifique
             fs.writeFileSync(filename, content, 'utf8');
-            this.view.displaySuccess(`Examen généré avec succès : ${filename}`);
-            return false; // Quitte la boucle
+            this.view.displaySuccess(`✅ Examen valide généré : ${filename}`);
+            return false; // Quitte le menu après succès
         } catch (err) {
-            this.view.displayError(`Impossible d'écrire le fichier : ${err.message}`);
-            return true; // Continue la boucle en cas d'erreur
+            this.view.displayError(`Erreur d'écriture : ${err.message}`);
+            return true;
         }
     }
 }
