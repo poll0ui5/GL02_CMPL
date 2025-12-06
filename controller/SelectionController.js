@@ -13,15 +13,20 @@ class SelectionController {
     }
 
     async start() {
-        // SPEC_NF03 : Performance - Chargement unique au début du module
         console.log("Chargement de la banque de questions...");
         this.banque.chargerBanque();
 
         let loop = true;
         while (loop) {
+            // Petit rappel visuel de l'état actuel pour l'utilisateur (NF02)
+            console.log(`\n--- Panier actuel : ${this.selection.count()} questions ---`);
+
             const action = await this.view.showMenu();
 
             switch (action) {
+                case 'search_add': // Nouvelle action
+                    await this.handleSearchAndAdd();
+                    break;
                 case 'add':
                     await this.handleAdd();
                     break;
@@ -41,8 +46,55 @@ class SelectionController {
         }
     }
 
+    // --- NOUVELLE LOGIQUE : Recherche + Ajout ---
+    async handleSearchAndAdd() {
+        // Vérification de la limite avant de commencer (NF01)
+        if (this.selection.count() >= 20) {
+            this.view.displayError("Limite atteinte (20 questions max). Impossible d'ajouter plus de questions.");
+            return;
+        }
+
+        const keyword = await this.view.promptForSearchKeyword();
+        const results = this.banque.rechercherQuestions(keyword);
+
+        if (results.length === 0) {
+            this.view.displayError(`Aucune question trouvée pour "${keyword}".`);
+            return;
+        }
+
+        // L'utilisateur coche les questions qu'il veut
+        const selectedIds = await this.view.selectQuestionsFromSearch(results);
+
+        if (selectedIds.length === 0) {
+            console.log("Aucune question sélectionnée.");
+            return;
+        }
+
+        let addedCount = 0;
+        let duplicateCount = 0;
+
+        for (const id of selectedIds) {
+            // Contrôle dynamique de la limite pendant l'ajout en masse
+            if (this.selection.count() >= 20) {
+                this.view.displayError(`Limite de 20 questions atteinte. Arrêt de l'ajout.`);
+                break;
+            }
+
+            const question = this.banque.getQuestionById(id);
+            if (question) {
+                if (this.selection.add(question)) {
+                    addedCount++;
+                } else {
+                    duplicateCount++;
+                }
+            }
+        }
+
+        if (addedCount > 0) this.view.displaySuccess(`${addedCount} question(s) ajoutée(s) au panier.`);
+        if (duplicateCount > 0) console.log(`⚠️ ${duplicateCount} question(s) étaient déjà dans le panier (doublons ignorés).`);
+    }
+
     async handleAdd() {
-        // SPEC_NF01 : Vérification limite haute avant ajout (optionnel mais recommandé)
         if (this.selection.count() >= 20) {
             this.view.displayError("Vous avez atteint la limite maximale de 20 questions.");
             return;
@@ -80,11 +132,10 @@ class SelectionController {
     }
 
     async handleSave() {
-        // SPEC_NF01 : Validation stricte 15-20 questions
         const validation = this.selection.isValid();
         if (!validation.valid) {
             this.view.displayError(`Validation échouée : ${validation.error}`);
-            return true; // On reste dans la boucle pour permettre à l'utilisateur de corriger
+            return true;
         }
 
         const filename = await this.view.promptForFilename();
@@ -93,10 +144,10 @@ class SelectionController {
 
         try {
             fs.writeFileSync(filename, content, 'utf8');
-            this.view.displaySuccess(`✅ Examen valide généré : ${filename}`);
-            return false; // Quitte le menu après succès
+            this.view.displaySuccess(`Examen généré avec succès : ${filename}`);
+            return false;
         } catch (err) {
-            this.view.displayError(`Erreur d'écriture : ${err.message}`);
+            this.view.displayError(`Impossible d'écrire le fichier : ${err.message}`);
             return true;
         }
     }
