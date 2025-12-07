@@ -28,12 +28,15 @@ class GiftExporter {
         // 2. Énoncé
         output += q.text;
 
+        // on gère le cas des questions de description avant pour éviter les crochets vides
+        if (q.category === 'Description') {
+            return output
+        }
+
         // 3. Bloc de réponse
         output += " {";
 
         switch (q.category) {
-            case 'Description':
-                break;
 
             case 'Essay':
                 break;
