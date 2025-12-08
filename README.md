@@ -1,5 +1,9 @@
 # 🧠 GL02 — Générateur d'Examens GIFT & Outils CLI
 
+Pour lancer le logiciel :
+
+terminal -> se placer dans le dossier -> node cli.js 
+
 ## 📌 Présentation
 
 Ce projet vise à fournir aux enseignants du **Sealand Republic Youth Education Ministry (SRYEM)** un outil en ligne de commande permettant de gérer, analyser et générer des examens numériques basés sur le format **GIFT (General Import Format Technology)**, compatible avec Moodle.
@@ -53,10 +57,6 @@ L'application facilite la création d'examens, la manipulation d'une banque de q
 ---
 
 ## 🧪 Exemple d’utilisation
-
-```bash
-# Lancer l'application
-python3 main.py
 
 # Rechercher une question
 > rechercher "physique"
