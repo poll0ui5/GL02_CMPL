@@ -6,6 +6,7 @@ const cli = require("@caporal/core").default;
 const GiftParser = require('./model/GIFTParser.js');
 const BanqueDeQuestions = require('./controller/BanqueDeQuestions.js');
 const ProfileController = require('./controller/ProfileController.js');
+const ComparisonController = require('./controller/ComparisonController.js');
 const VCardController = require('./controller/VCardController.js');
 const Affichage = require('./view/Affichage.js');
 const ExamController = require('./controller/ExamController.js');
@@ -128,8 +129,27 @@ cli
         await controller.processExam(args.file);
     })
 
+    // ====================================================================================
+    // COMMANDE 7 : COMPARISON (SPEC06)
+    // Comparer un profil d'examen avec des fichiers de référence
+    // ====================================================================================
+    .command('comparer', 'Compare un profil d\'examen avec des fichiers de référence (SPEC06)')
+    .argument('<examFile>', 'Le fichier GIFT d\'examen à comparer')
+    .argument('[referenceFiles...]', 'Un ou plusieurs fichiers de référence (banque nationale)')
+    .action(({args}) => {
+        const controller = new ComparisonController();
+        
+        if (!args.referenceFiles || args.referenceFiles.length === 0) {
+            console.error('❌ Erreur : Vous devez fournir au moins un fichier de référence.');
+            console.log('Usage : comparer <examFile> <referenceFile1> [referenceFile2] ...');
+            return;
+        }
+
+        controller.processComparison(args.examFile, args.referenceFiles);
+    })
+
 // ====================================================================================
-// COMMANDE 7 : SELECTION (SPEC07)
+// COMMANDE 8 : SELECTION (SPEC07)
 // Gestion interactive d'une sélection de questions
 // ====================================================================================
 .command('selection', 'Gérer une sélection de questions pour créer un examen')

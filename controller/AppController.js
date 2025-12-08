@@ -5,6 +5,7 @@ const SelectionController = require('./SelectionController');
 const VCardController = require('./VCardController');
 const ExamController = require('./ExamController');
 const ProfileController = require('./ProfileController');
+const ComparisonController = require('./ComparisonController');
 const BanqueDeQuestions = require('./BanqueDeQuestions');
 const Affichage = require('../view/Affichage');
 
@@ -24,6 +25,7 @@ class AppController {
                         { name: 'Creer un examen (Selection)', value: 'create' },
                         { name: 'Simuler un examen existant', value: 'simulate' },
                         { name: 'Analyser un fichier GIFT (Profil)', value: 'profile' },
+                        { name: 'Comparer un profil d\'examen', value: 'comparison' },
                         { name: 'Generer ma VCard', value: 'vcard' },
                         new inquirer.Separator(),
                         { name: 'Quitter', value: 'exit' }
@@ -62,6 +64,9 @@ class AppController {
                 break;
             case 'profile':
                 await this.handleProfile();
+                break;
+            case 'comparison':
+                await this.handleComparison();
                 break;
             case 'vcard':
                 const vcardCtrl = new VCardController();
@@ -148,6 +153,17 @@ class AppController {
         }]);
         const ctrl = new ProfileController();
         ctrl.processFile(answer.file);
+
+        await inquirer.prompt([{
+            type: 'input',
+            name: 'pause',
+            message: 'Appuyez sur Entree pour continuer...'
+        }]);
+    }
+
+    async handleComparison() {
+        const ctrl = new ComparisonController();
+        await ctrl.start();
 
         await inquirer.prompt([{
             type: 'input',
