@@ -12,11 +12,11 @@ class ComparisonView {
     }
 
     displayError(message) {
-        console.error(`\n  ❌ Erreur : ${message}`.red);
+        console.error(`\n  Erreur : ${message}`.red);
     }
 
     displayWarning(message) {
-        console.warn(`\n  ⚠️  Avertissement : ${message}`.yellow);
+        console.warn(`\n   Avertissement : ${message}`.yellow);
     }
 
     /**
